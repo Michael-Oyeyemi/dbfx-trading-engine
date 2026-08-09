@@ -1,16 +1,16 @@
 # DBXF: Distributed Backtesting & Order Execution Framework
 
-A hybrid distributed trading system engineered to stress-test quantitative trading strategies across multi-asset portfolios. 
+A hybrid distributed trading system engineered to stress test quantitative trading strategies across multiple portfolios. 
 
-This project utilizes a microservice architecture, splitting the high-concurrency order execution engine (Java/Spring Boot) from the quantitative analytics and data ingestion pipeline (Python).
+This project utilizes a microservice architecture, separating the order execution engine (Java/Spring Boot) from the quantitative analytics and data ingestion pipeline (Python).
 
 ---
 
 ## System Architecture
 
-The framework is decoupled into two primary components communicating via RESTful APIs:
+The framework is divided into two primary components communicating via RESTful APIs:
 
-*   **Java Backend (The Exchange/Broker):** Built with Spring Boot, this high-throughput backend handles order matching, portfolio seeding, and balance management. It leverages advanced concurrency patterns including thread-safe producer-consumer queues (`LinkedBlockingQueue`), in-memory order matching engines (`ConcurrentSkipListMap`), and optimistic locking to prevent race conditions during high-frequency signal streaming.
+*   **Java Backend (The Exchange/Broker):** Built with Spring Boot, this backend handles order matching, portfolio seeding, and balance management. It leverages advanced concurrency patterns including thread-safe producer-consumer queues (`LinkedBlockingQueue`), in-memory order matching engines (`ConcurrentSkipListMap`), and optimistic locking to prevent race conditions during high-frequency signal streaming.
 *   **Python Analytics (The Quant/Orchestrator):** A dynamic orchestration service that reads from a central JSON blueprint. It ingests historical multi-asset data via `yfinance`, calculates technical indicators (SMA, RSI, Bollinger Bands) using `pandas`, and streams asynchronous buy/sell signals to the Java backend. 
 
 ---
@@ -20,7 +20,7 @@ The framework is decoupled into two primary components communicating via RESTful
 *   **Fail-Fast Configuration Pipeline:** A strict validation gatekeeper that sanitizes requested tickers, time periods, and JSON structures before executing data ingestion.
 *   **Dynamic Database Seeding:** The Python orchestrator dynamically commands the Java backend to wipe and seed the in-memory H2 database with the exact portfolios and cash balances required for the simulation.
 *   **Concurrent Multi-Strategy Execution:** Simulates multiple trading bots simultaneously, evaluating discrete mathematical strategies against the same asset data.
-*   **Automated Tear Sheets:** Utilizes `matplotlib` in non-blocking mode to generate multi-panel equity curves and trade signal visualizations for true Net Asset Value (NAV) tracking.
+*   **Automated Tear Sheets:** Utilizes `matplotlib`  to generate multi-panel equity curves and trade signal visualizations for true Net Asset Value (NAV) tracking.
 
 ---
 
