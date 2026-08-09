@@ -41,7 +41,7 @@ Because this is a distributed system, you must start the Java backend before lau
 Open a terminal, navigate to the Java project directory, and boot the Spring application.
 
 ```bash
-cd dbxf-execution-engine
+cd dbxf
 mvn spring-boot:run
 ```
 The backend will initialize an empty in-memory H2 database and bind to `localhost:8080`.
@@ -50,7 +50,7 @@ The backend will initialize an empty in-memory H2 database and bind to `localhos
 Open a **second terminal**, navigate to the Python project directory, install the dependencies, and run the simulation.
 
 ```bash
-cd dbxf-analytics
+cd python-analytics
 
 # Create and activate a virtual environment (optional but recommended)
 python -m venv venv
