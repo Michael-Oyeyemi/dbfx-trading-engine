@@ -1,0 +1,17 @@
+# --- OS Files ---
+.DS_Store
+
+# --- Java & Spring Boot ---
+target/
+.idea/
+*.iml
+*.class
+
+# --- Python ---
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# --- Market Data ---
+*.csv

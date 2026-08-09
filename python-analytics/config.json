@@ -1,0 +1,89 @@
+{
+  "simulation_name": "Tech_Stock_Stress_Test",
+  "data_ingestion": {
+    "tickers": ["AAPL", "NVDA", "TSLA"],
+    "period": "1y",
+    "interval": "1h"
+  },
+  "portfolios": [
+    {
+      "id": 1,
+      "username": "SMA_Bot",
+      "starting_cash": 100000.0,
+      "starting_positions": [
+        {
+          "ticker": "AAPL",
+          "quantity": 500
+        },
+        {
+          "ticker": "NVDA",
+          "quantity": 200
+        },
+        {
+          "ticker": "TSLA",
+          "quantity": 300
+        }
+      ],
+      "strategy": {
+        "type": "SMA_CROSSOVER",
+        "parameters": {
+          "short_window": 5,
+          "long_window": 20
+        }
+      }
+    },
+    {
+      "id": 2,
+      "username": "RSI_Momentum_Bot",
+      "starting_cash": 100000.0,
+      "starting_positions": [
+        {
+          "ticker": "AAPL",
+          "quantity": 500
+        },
+        {
+          "ticker": "NVDA",
+          "quantity": 200
+        },
+        {
+          "ticker": "TSLA",
+          "quantity": 300
+        }
+      ],
+      "strategy": {
+        "type": "RSI",
+        "parameters": {
+          "time_period": 14,
+          "oversold_threshold": 30,
+          "overbought_threshold": 70
+        }
+      }
+    },
+    {
+      "id": 3,
+      "username": "Bollinger_MeanReversion_Bot",
+      "starting_cash": 100000.0,
+      "starting_positions": [
+        {
+          "ticker": "AAPL",
+          "quantity": 500
+        },
+        {
+          "ticker": "NVDA",
+          "quantity": 200
+        },
+        {
+          "ticker": "TSLA",
+          "quantity": 300
+        }
+      ],
+      "strategy": {
+        "type": "BOLLINGER_BANDS",
+        "parameters": {
+          "moving_average_window": 20,
+          "standard_deviation_multiplier": 2
+        }
+      }
+    }
+  ]
+}
