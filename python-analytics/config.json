@@ -27,8 +27,8 @@
       "strategy": {
         "type": "SMA_CROSSOVER",
         "parameters": {
-          "short_window": 5,
-          "long_window": 20
+          "short_window": 10,
+          "long_window": 30
         }
       }
     },

@@ -6,14 +6,9 @@ import matplotlib.pyplot as plt
 import config_validator
 import download_data
 
-# --- Configuration Constants ---
 JAVA_BACKEND_URL = "http://localhost:8080/api/trade/execute"
 JAVA_PORTFOLIO_URL = "http://localhost:8080/api/portfolio"
 JAVA_SETUP_URL = "http://localhost:8080/api/portfolio/setup"
-
-# ==========================================
-# API NETWORKING & BACKEND INTEGRATION
-# ==========================================
 
 def send_trade_signal(portfolio_id, ticker, side, price, quantity):
     payload = {
@@ -26,7 +21,7 @@ def send_trade_signal(portfolio_id, ticker, side, price, quantity):
     try:
         response = requests.post(JAVA_BACKEND_URL, json=payload)
         if response.status_code != 202:
-            print(f"[ERROR] Rejected: {response.status_code} - {response.text}")
+            print(f"Rejected: {response.status_code}: {response.text}")
     except requests.exceptions.ConnectionError:
         pass
 
@@ -40,26 +35,20 @@ def fetch_portfolio_summary(portfolio_id):
     return None
 
 def setup_java_backend(portfolios):
-    print("\n[SETUP] Dynamically seeding Java Backend Database...")
+    print("\nSeeding Java Backend Database.")
     try:
         response = requests.post(JAVA_SETUP_URL, json={"portfolios": portfolios})
         if response.status_code == 200:
-            print("[SUCCESS] Java backend successfully seeded with JSON configuration.\n")
+            print("Java backend successfully seeded with JSON configuration.\n")
         else:
-            print(f"[ERROR] Backend setup failed: {response.status_code} - {response.text}")
+            print(f"Backend setup failed: {response.status_code} - {response.text}")
             sys.exit(1)
     except requests.exceptions.ConnectionError:
-        print("[CRITICAL] Could not connect to Java backend. Is Spring Boot running?")
+        print("Could not connect to Java backend.")
         sys.exit(1)
 
-# ==========================================
-# MODULAR STRATEGY ENGINE
-# ==========================================
 
 def apply_strategy_indicators(df, portfolios):
-    """
-    Dynamically applies technical indicators to the DataFrame based on the JSON config.
-    """
     for p in portfolios:
         pid = p["id"]
         strat = p["strategy"]
@@ -88,10 +77,6 @@ def apply_strategy_indicators(df, portfolios):
     return df
 
 def evaluate_trade_signal(prev, current, portfolio_config):
-    """
-    Evaluates a single day's price action against the defined strategy rules.
-    Returns 'BUY', 'SELL', or None.
-    """
     pid = portfolio_config["id"]
     stype = portfolio_config["strategy"]["type"]
     params = portfolio_config["strategy"]["parameters"]
@@ -123,14 +108,10 @@ def evaluate_trade_signal(prev, current, portfolio_config):
 
     return None
 
-# ==========================================
-# VISUALIZATION & CORE LOOP
-# ==========================================
 
 def plot_dynamic_results(df, signals_dict, nav_history_dict, ticker, portfolios):
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), gridspec_kw={'height_ratios': [2, 1]})
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(9, 7), gridspec_kw={'height_ratios': [2, 1]})
     
-    # --- Top Panel: Stock Price & Signals ---
     ax1.plot(df['Date'], df['Close'], label=f'{ticker} Price', color='gray', alpha=0.5, linewidth=1.5)
     
     colors = ['blue', 'orange', 'purple', 'green']
@@ -141,7 +122,6 @@ def plot_dynamic_results(df, signals_dict, nav_history_dict, ticker, portfolios)
         color = colors[idx % len(colors)]
         stype = p["strategy"]["type"]
         
-        # Only plot overlay lines if they are price-scaled (skip RSI 0-100 overlay on $400 price axis)
         if stype == "SMA_CROSSOVER":
             sw = p["strategy"]["parameters"]["short_window"]
             lw = p["strategy"]["parameters"]["long_window"]
@@ -160,7 +140,6 @@ def plot_dynamic_results(df, signals_dict, nav_history_dict, ticker, portfolios)
     ax1.grid(True, linestyle=':', alpha=0.6)
     ax1.legend(loc='upper left', bbox_to_anchor=(1, 1))
 
-    # --- Bottom Panel: Portfolio Value (NAV) Over Time ---
     for idx, p in enumerate(portfolios):
         pid = p["id"]
         color = colors[idx % len(colors)]
@@ -176,11 +155,12 @@ def plot_dynamic_results(df, signals_dict, nav_history_dict, ticker, portfolios)
     plt.show(block=False)
 
 def run_dynamic_simulation(config_filepath="config.json"):
-    print("==================================================")
-    print("      DBXF DYNAMIC MULTI-ASSET SIMULATION         ")
-    print("==================================================")
+    print("DBXF Trade Simulation")
 
     config = config_validator.load_and_validate_config(config_filepath)
+    if not config:
+        print("Invalid or empty config.")
+        sys.exit(1)
     portfolios = config["portfolios"]
 
     downloaded_files = download_data.fetch_market_data(config)
@@ -205,7 +185,6 @@ def run_dynamic_simulation(config_filepath="config.json"):
             start_shares = next((pos["quantity"] for pos in p.get("starting_positions", []) if pos["ticker"] == ticker), 0)
             internal_tracking[p["id"]] = {"cash": start_cash, "shares": start_shares}
 
-        # MODULAR CALL: Apply all technical indicators upfront
         df = apply_strategy_indicators(df, portfolios)
         latest_price = 0.0
 
@@ -226,7 +205,6 @@ def run_dynamic_simulation(config_filepath="config.json"):
             for p in portfolios:
                 pid = p["id"]
                 
-                # MODULAR CALL: Evaluate strategy logic
                 signal = evaluate_trade_signal(prev, current, p)
                 
                 if signal == "BUY":
@@ -248,9 +226,7 @@ def run_dynamic_simulation(config_filepath="config.json"):
         global_latest_prices[ticker] = latest_price
         time.sleep(1.0) 
 
-        print("\n==================================================")
-        print(f"           FINAL VALUATIONS (NAV) - {ticker}      ")
-        print("==================================================")
+        print(f"FINAL VALUATIONS (NAV) - {ticker}")
         
         for p in portfolios:
             pid = p["id"]
@@ -263,7 +239,7 @@ def run_dynamic_simulation(config_filepath="config.json"):
             positions = summary.get("positions", [])
             holdings_value = 0.0
             
-            print(f"\n📊 Portfolio #{pid} ({summary.get('username')})")
+            print(f"\nPortfolio #{pid} ({summary.get('username')})")
             for pos in positions:
                 sym, qty = pos.get("ticker"), pos.get("quantity", 0)
                 if sym == ticker:
@@ -272,15 +248,12 @@ def run_dynamic_simulation(config_filepath="config.json"):
                     print(f"   Holdings: {qty} {sym} @ ${latest_price:,.2f} = ${val:,.2f}")
                 
             total_nav = cash + holdings_value
-            print(f"   Total NAV (for {ticker} context): ${total_nav:,.2f}")
+            print(f"Total NAV (for {ticker} context): ${total_nav:,.2f}")
 
-        print(f"\n[VISUALIZATION] Launching performance chart for {ticker}...")
+        print(f"\nLaunching performance chart for {ticker}...")
         plot_dynamic_results(df, signals_dict, nav_history_dict, ticker, portfolios)
 
-    # --- GLOBAL PORTFOLIO PERFORMANCE ---
-    print("\n==================================================")
-    print("  🌍 FINAL GLOBAL PORTFOLIO PERFORMANCE (ALL ASSETS)")
-    print("==================================================")
+    print("FINAL GLOBAL PORTFOLIO PERFORMANCE (ALL ASSETS)")
     
     for p in portfolios:
         pid = p["id"]
@@ -295,23 +268,22 @@ def run_dynamic_simulation(config_filepath="config.json"):
         positions = summary.get("positions", [])
         final_holdings_value = 0.0
         
-        print(f"\n📊 Portfolio #{pid} ({summary.get('username')})")
-        print(f"   Final Available Cash: ${final_cash:,.2f}")
+        print(f"\nPortfolio #{pid} ({summary.get('username')})")
+        print(f"Final Available Cash: ${final_cash:,.2f}")
         
         for pos in positions:
             sym, qty = pos.get("ticker"), pos.get("quantity", 0)
             if sym in global_latest_prices:
                 val = qty * global_latest_prices[sym]
                 final_holdings_value += val
-                print(f"   Final Holdings: {qty} {sym} @ ${global_latest_prices[sym]:,.2f} = ${val:,.2f}")
+                print(f"Final Holdings: {qty} {sym} @ ${global_latest_prices[sym]:,.2f} = ${val:,.2f}")
             
         global_final_nav = final_cash + final_holdings_value
-        print(f"   ----------------------------------------")
-        print(f"   TOTAL GLOBAL NAV:     ${global_final_nav:,.2f}")
+        print(f"TOTAL GLOBAL NAV: ${global_final_nav:,.2f}")
         
         if global_initial_nav > 0:
             net_return = ((global_final_nav - global_initial_nav) / global_initial_nav) * 100.0
-            print(f"   OVERALL NET RETURN:   {net_return:+.2f}%")
+            print(f"OVERALL NET RETURN: {net_return:+.2f}%")
 
     plt.show()
 
