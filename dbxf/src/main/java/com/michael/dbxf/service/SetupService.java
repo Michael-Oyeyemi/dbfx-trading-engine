@@ -33,12 +33,10 @@ public class SetupService {
 
     @Transactional
     public void initializeEnvironment(SetupRequest request) {
-        // 1. Wipe the database
         orderRepository.deleteAll();
         positionRepository.deleteAll();
         portfolioRepository.deleteAll();
 
-        // 2. Reset the ID auto-increment counters back to 1
         entityManager.createNativeQuery("ALTER TABLE portfolio ALTER COLUMN id RESTART WITH 1").executeUpdate();
         entityManager.createNativeQuery("ALTER TABLE portfolio_position ALTER COLUMN id RESTART WITH 1").executeUpdate();
         entityManager.createNativeQuery("ALTER TABLE trade_order ALTER COLUMN id RESTART WITH 1").executeUpdate();
@@ -47,13 +45,11 @@ public class SetupService {
 
         List<Position> allPositions = new ArrayList<>();
 
-        // 3. Dynamically build the new state from the JSON configuration
         for (var pDto : request.portfolios()) {
             Portfolio portfolio = new Portfolio();
             portfolio.setUsername(pDto.username());
             portfolio.setBalance(pDto.startingCash());
 
-            // Save immediately to generate the primary key ID
             portfolio = portfolioRepository.save(portfolio);
 
             if (pDto.startingPositions() != null) {
@@ -67,7 +63,6 @@ public class SetupService {
             }
         }
 
-        // Save all associated starting inventory
         positionRepository.saveAll(allPositions);
     }
 }
